@@ -14,8 +14,8 @@ import java.util.stream.Stream;
 
 public class ContactDataProvider extends AbstractBackEndDataProvider<Contact, CrudFilter> {
 
-    final Map<String, Contact> contactsMap;
-    private Consumer<Long> sizeChangeListener;
+    final transient Map<String, Contact> contactsMap;
+    private transient Consumer<Long> sizeChangeListener;
 
     public ContactDataProvider(Map<String, Contact> contacts) {
         this.contactsMap = contacts;
@@ -33,7 +33,6 @@ public class ContactDataProvider extends AbstractBackEndDataProvider<Contact, Cr
     }
 
     private static Predicate<Contact> predicate(CrudFilter filter) {
-        Stream<Map.Entry<String, String>> a = filter.getConstraints().entrySet().stream();
         return filter.getConstraints().entrySet().stream().map(constraint -> (Predicate<Contact>) contact -> {
             try {
                 Object value = valueOf(constraint.getKey(), contact);
@@ -87,7 +86,6 @@ public class ContactDataProvider extends AbstractBackEndDataProvider<Contact, Cr
 
     @Override
     protected int sizeInBackEnd(Query<Contact, CrudFilter> query) {
-        // For RDBMS just execute a SELECT COUNT(*) ... WHERE query
         long count = fetchFromBackEnd(query).count();
 
         if (sizeChangeListener != null) {

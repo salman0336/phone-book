@@ -22,10 +22,7 @@ import java.util.*;
 import org.vaadin.phonebook.entity.Contact;
 import org.vaadin.phonebook.dataprovider.ContactDataProvider;
 
-/**
- * The main view contains a text field for getting the user name and a button
- * that shows a greeting message in a notification.
- */
+
 @SuppressWarnings("serial")
 @Route("")
 public class PhoneBookView extends VerticalLayout {
@@ -43,9 +40,12 @@ public class PhoneBookView extends VerticalLayout {
     private Boolean isAddContactClicked = false;
 
     private LocalDateTime lastUpdatedTimeFlag;
-    private ConfirmDialog warnAlreadyUpdateddialog;
-    private Boolean warnOnAlreadyUpdatedContact = true;
-
+    private boolean warnOnAlreadyUpdatedContact = true;
+    static Map<String, Contact> contactsMap = new HashMap<String, Contact>();
+    static {
+        contactsMap.put("03451550528", new Contact("Salman", "03451550528", "salman@gmail.com", "abc street", "xyz city", "Pakistan"));
+        contactsMap.put("09251550528", new Contact("Hafiz", "09251550528", "hafiz@gmail.com", "abc street", "xyz city", "Pakistan"));
+    }
     public PhoneBookView() {
         initView();
     }
@@ -63,18 +63,14 @@ public class PhoneBookView extends VerticalLayout {
                 e.getSource().cancelSave();
             }
         });
-        crud.addSaveListener(e -> {
-            saveContact(e.getItem());
-        });
+        crud.addSaveListener(e -> saveContact(e.getItem()));
         crud.addEditListener(e -> {
             editPhoneNumber = e.getItem().getPhoneNumber();
             isAddContactClicked = false;
             lastUpdatedTimeFlag = e.getItem().getLastUpdatedTime();
             validateFields();
         });
-        crud.addDeleteListener(e -> {
-            contactsMap.remove(e.getItem().getPhoneNumber());
-        });
+        crud.addDeleteListener(e -> contactsMap.remove(e.getItem().getPhoneNumber()));
         crud.setToolbar(customAddContactButton());
 
         add(crud);
@@ -95,8 +91,8 @@ public class PhoneBookView extends VerticalLayout {
         FormLayout formLayout = new FormLayout(name, phoneNumber, email, street, city, country);
         binder = new Binder<>(Contact.class);
         binder.forField(name).asRequired().bind(Contact::getName, Contact::setName);
-        binder.bind(phoneNumber, Contact::getPhoneNumber, Contact::setPhoneNumber);
-        binder.bind(email, Contact::getEmail, Contact::setEmail);
+        binder.forField(phoneNumber).asRequired().bind(Contact::getPhoneNumber, Contact::setPhoneNumber);
+        binder.forField(email).asRequired().bind(Contact::getEmail, Contact::setEmail);
         binder.bind(street, Contact::getStreet, Contact::setStreet);
         binder.bind(city, Contact::getCity, Contact::setCity);
         binder.bind(country, Contact::getCountry, Contact::setCountry);
@@ -107,10 +103,8 @@ public class PhoneBookView extends VerticalLayout {
         contact.setLastUpdatedTime(LocalDateTime.now());
         if (contactsMap.containsValue(contact)) {
             contactsMap.remove(editPhoneNumber);
-            contactsMap.put(contact.getPhoneNumber(), contact);
-        } else {
-            contactsMap.put(contact.getPhoneNumber(), contact);
         }
+        contactsMap.put(contact.getPhoneNumber(), contact);
     }
 
     private void setGridColumns() {
@@ -119,7 +113,9 @@ public class PhoneBookView extends VerticalLayout {
     }
 
     private Boolean isContactAlreadyUpdated(Contact contact) {
-        return contact.getLastUpdatedTime().equals(lastUpdatedTimeFlag) ? false : true;
+        if(contact.getLastUpdatedTime().equals(lastUpdatedTimeFlag))
+            return false;
+        return true;
     }
 
     private void validateFields() {
@@ -131,15 +127,11 @@ public class PhoneBookView extends VerticalLayout {
 
     }
     private void createWarningDialogue() {
-        warnAlreadyUpdateddialog = new ConfirmDialog();
-        warnAlreadyUpdateddialog.setHeader("Already Updated");
-        warnAlreadyUpdateddialog.setText("This Contact is already updated by another user.");
-        warnAlreadyUpdateddialog.setConfirmText("OK");
-        warnAlreadyUpdateddialog.open();
+        ConfirmDialog warningOnAlreadyUpdateContact = new ConfirmDialog();
+        warningOnAlreadyUpdateContact.setHeader("Already Updated");
+        warningOnAlreadyUpdateContact.setText("This Contact is already updated by another user.");
+        warningOnAlreadyUpdateContact.setConfirmText("OK");
+        warningOnAlreadyUpdateContact.open();
         warnOnAlreadyUpdatedContact = false;
     }
-    static Map<String, Contact> contactsMap = new HashMap<String, Contact>() {{
-        put("03451550528", new Contact("Salman", "03451550528", "salman@gmail.com", "abc street", "xyz city", "Pakistan"));
-        put("09251550528", new Contact("Hafiz", "09251550528", "hafiz@gmail.com", "abc street", "xyz city", "Pakistan"));
-    }};
 }
