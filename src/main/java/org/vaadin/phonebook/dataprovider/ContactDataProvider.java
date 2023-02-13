@@ -14,7 +14,7 @@ import java.util.stream.Stream;
 
 public class ContactDataProvider extends AbstractBackEndDataProvider<Contact, CrudFilter> {
 
-    final transient Map<String, Contact> contactsMap;
+    private final transient Map<String, Contact> contactsMap;
     private transient Consumer<Long> sizeChangeListener;
 
     public ContactDataProvider(Map<String, Contact> contacts) {

@@ -5,6 +5,7 @@ import com.vaadin.componentfactory.enhancedcrud.Crud;
 import com.vaadin.componentfactory.enhancedcrud.CrudEditor;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.icon.VaadinIcon;
@@ -17,6 +18,7 @@ import com.vaadin.flow.router.Route;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 
 import org.vaadin.phonebook.entity.Contact;
@@ -27,21 +29,20 @@ import org.vaadin.phonebook.dataprovider.ContactDataProvider;
 @Route("")
 public class PhoneBookView extends VerticalLayout {
 
-    Crud<Contact> crud;
-    ContactDataProvider contactDataProvider;
-    Binder<Contact> binder;
-    TextField name = new TextField("Name");
-    TextField phoneNumber = new TextField("Phone number");
-    TextField email = new TextField("email");
-    TextField street = new TextField("Street");
-    TextField city = new TextField("City");
-    TextField country = new TextField("Country");
+    private Crud<Contact> crud;
+    private ContactDataProvider contactDataProvider;
+    private Binder<Contact> binder;
+    private TextField name = new TextField("Name");
+    private TextField phoneNumber = new TextField("Phone number");
+    private TextField email = new TextField("email");
+    private TextField street = new TextField("Street");
+    private TextField city = new TextField("City");
+    private ComboBox<String> countryComboBox = new ComboBox<>("Country");
     private String editPhoneNumber;
     private Boolean isAddContactClicked = false;
-
     private LocalDateTime lastUpdatedTimeFlag;
     private boolean warnOnAlreadyUpdatedContact = true;
-    static Map<String, Contact> contactsMap = new HashMap<String, Contact>();
+    static Map<String, Contact> contactsMap = new HashMap<>();
     static {
         contactsMap.put("03451550528", new Contact("Salman", "03451550528", "salman@gmail.com", "abc street", "xyz city", "Pakistan"));
         contactsMap.put("09251550528", new Contact("Hafiz", "09251550528", "hafiz@gmail.com", "abc street", "xyz city", "Pakistan"));
@@ -88,14 +89,15 @@ public class PhoneBookView extends VerticalLayout {
     }
     private CrudEditor<Contact> createEditor() {
 
-        FormLayout formLayout = new FormLayout(name, phoneNumber, email, street, city, country);
+        FormLayout formLayout = new FormLayout(name, phoneNumber, email, street, city, countryComboBox);
         binder = new Binder<>(Contact.class);
         binder.forField(name).asRequired().bind(Contact::getName, Contact::setName);
         binder.forField(phoneNumber).asRequired().bind(Contact::getPhoneNumber, Contact::setPhoneNumber);
         binder.forField(email).asRequired().bind(Contact::getEmail, Contact::setEmail);
         binder.bind(street, Contact::getStreet, Contact::setStreet);
         binder.bind(city, Contact::getCity, Contact::setCity);
-        binder.bind(country, Contact::getCountry, Contact::setCountry);
+        binder.bind(countryComboBox, Contact::getCountry, Contact::setCountry);
+        countryComboBox.setItems(getCountriesNameList());
 
         return new BinderCrudEditor<>(binder, formLayout);
     }
@@ -133,5 +135,10 @@ public class PhoneBookView extends VerticalLayout {
         warningOnAlreadyUpdateContact.setConfirmText("OK");
         warningOnAlreadyUpdateContact.open();
         warnOnAlreadyUpdatedContact = false;
+    }
+    private List<String> getCountriesNameList(){
+        return Arrays.stream(Locale.getISOCountries()).map(e->{
+            return (new Locale("",e)).getDisplayCountry();
+        }).sorted().collect(Collectors.toList());
     }
 }
