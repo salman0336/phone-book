@@ -1,0 +1,32 @@
+      [part="header"] ::slotted(*) {
+        margin-top: var(--lumo-space-s);
+        margin-bottom: var(--lumo-space-s);
+      }
+      [part="scroller"] {
+        padding: var(--lumo-space-l);
+      }
+      [part="editor"] {
+        background: var(--lumo-base-color);
+        box-sizing: border-box;
+      }
+      :host(:not([editor-position=""])) [part="editor"]:not([hidden]) {
+        box-shadow: var(--lumo-box-shadow-m);
+      }
+      :host(:not([theme~="no-border"]):not([editor-position=""])) [part="editor"]:not([hidden]) {
+        border: 1px solid var(--lumo-contrast-20pct);
+      }
+      :host(:not([theme~="no-border"])[editor-position="bottom"]) [part="editor"]:not([hidden]) {
+        border-top: 0;
+      }
+      :host(:not([theme~="no-border"])[editor-position="aside"]) [part="editor"]:not([hidden]) {
+        border-left: 0;
+      }
+      
+      [part="footer"] {
+        background-color: var(--lumo-contrast-5pct);
+        padding: var(--lumo-space-s) var(--lumo-space-s);
+      }
+      [part="footer"] ::slotted(*) {
+        margin-left: var(--lumo-space-s);
+        margin-right: var(--lumo-space-s);
+      }

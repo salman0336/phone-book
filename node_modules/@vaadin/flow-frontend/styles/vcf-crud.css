@@ -1,0 +1,18 @@
+      :host {
+        font-family: var(--lumo-font-family);
+      }
+      [part="toolbar"] {
+        padding: var(--lumo-space-s) var(--lumo-space-m);
+        background-color: var(--lumo-contrast-5pct);
+        border: 1px solid var(--lumo-contrast-10pct);
+        border-top: none;
+      }
+      [part="toolbar"] ::slotted(*:not(:first-child)) {
+        margin-left: var(--lumo-space-s);
+      }
+      :host([theme~="no-border"]) [part="toolbar"] {
+        border: 0;
+      }
+      vaadin-grid-cell-content {
+        text-overflow: ellipsis;
+      }
