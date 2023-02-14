@@ -42,7 +42,7 @@ public class PhoneBookView extends VerticalLayout {
     private Boolean isAddContactClicked = false;
     private LocalDateTime lastUpdatedTimeFlag;
     private boolean warnOnAlreadyUpdatedContact = true;
-    static Map<String, Contact> contactsMap = new HashMap<>();
+    static Map<String, Contact> contactsMap = new LinkedHashMap<>();
     static {
         contactsMap.put("03451550528", new Contact("Salman", "03451550528", "salman@gmail.com", "abc street", "xyz city", "Pakistan"));
         contactsMap.put("09251550528", new Contact("Hafiz", "09251550528", "hafiz@gmail.com", "abc street", "xyz city", "Pakistan"));
