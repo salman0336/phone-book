@@ -137,8 +137,6 @@ public class PhoneBookView extends VerticalLayout {
         warnOnAlreadyUpdatedContact = false;
     }
     private List<String> getCountriesNameList(){
-        return Arrays.stream(Locale.getISOCountries()).map(e->{
-            return (new Locale("",e)).getDisplayCountry();
-        }).sorted().collect(Collectors.toList());
+        return Arrays.stream(Locale.getISOCountries()).map(e-> (new Locale("",e)).getDisplayCountry()).sorted().collect(Collectors.toList());
     }
 }
