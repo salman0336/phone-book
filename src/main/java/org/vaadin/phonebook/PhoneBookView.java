@@ -43,10 +43,12 @@ public class PhoneBookView extends VerticalLayout {
     private LocalDateTime lastUpdatedTimeFlag;
     private boolean warnOnAlreadyUpdatedContact = true;
     static Map<String, Contact> contactsMap = new LinkedHashMap<>();
+
     static {
         contactsMap.put("03451550528", new Contact("Salman", "03451550528", "salman@gmail.com", "abc street", "xyz city", "Pakistan"));
         contactsMap.put("09251550528", new Contact("Hafiz", "09251550528", "hafiz@gmail.com", "abc street", "xyz city", "Pakistan"));
     }
+
     public PhoneBookView() {
         initView();
     }
@@ -71,11 +73,12 @@ public class PhoneBookView extends VerticalLayout {
             lastUpdatedTimeFlag = e.getItem().getLastUpdatedTime();
             validateFields();
         });
-        crud.addDeleteListener(e -> contactsMap.remove(e.getItem().getPhoneNumber()));
+        crud.addDeleteListener(e -> deleteContact(e.getItem().getPhoneNumber()));
         crud.setToolbar(customAddContactButton());
 
         add(crud);
     }
+
     private Button customAddContactButton() {
         Button addContactButton = new Button("Add Contact", VaadinIcon.PLUS.create());
         addContactButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
@@ -87,6 +90,7 @@ public class PhoneBookView extends VerticalLayout {
         });
         return addContactButton;
     }
+
     private CrudEditor<Contact> createEditor() {
 
         FormLayout formLayout = new FormLayout(name, phoneNumber, email, street, city, countryComboBox);
@@ -101,12 +105,17 @@ public class PhoneBookView extends VerticalLayout {
 
         return new BinderCrudEditor<>(binder, formLayout);
     }
+
     private void saveContact(Contact contact) {
         contact.setLastUpdatedTime(LocalDateTime.now());
         if (contactsMap.containsValue(contact)) {
-            contactsMap.remove(editPhoneNumber);
+            contactDataProvider.delete(editPhoneNumber);
         }
-        contactsMap.put(contact.getPhoneNumber(), contact);
+        contactDataProvider.persist(contact);
+    }
+
+    private void deleteContact(String phoneNumber) {
+        contactDataProvider.delete(phoneNumber);
     }
 
     private void setGridColumns() {
@@ -115,19 +124,20 @@ public class PhoneBookView extends VerticalLayout {
     }
 
     private Boolean isContactAlreadyUpdated(Contact contact) {
-        if(contact.getLastUpdatedTime().equals(lastUpdatedTimeFlag))
+        if (contact.getLastUpdatedTime().equals(lastUpdatedTimeFlag))
             return false;
         return true;
     }
 
     private void validateFields() {
-        SerializablePredicate<String> alreadyExist = value -> !(contactsMap.containsKey(phoneNumber.getValue())&&(isAddContactClicked || !phoneNumber.getValue().equals(editPhoneNumber)));
+        SerializablePredicate<String> alreadyExist = value -> !(contactsMap.containsKey(phoneNumber.getValue()) && (isAddContactClicked || !phoneNumber.getValue().equals(editPhoneNumber)));
         Binder.Binding<Contact, String> phoneBinding = binder.forField(phoneNumber).asRequired().withValidator(alreadyExist, "Phone Number Already Exist")
                 .bind(Contact::getPhoneNumber, Contact::setPhoneNumber);
         binder.forField(email).asRequired().withValidator(new EmailValidator("Invalid Email Address")).bind(Contact::getEmail, Contact::setEmail);
         phoneNumber.addValueChangeListener(e -> phoneBinding.validate());
 
     }
+
     private void createWarningDialogue() {
         ConfirmDialog warningOnAlreadyUpdateContact = new ConfirmDialog();
         warningOnAlreadyUpdateContact.setHeader("Already Updated");
@@ -136,7 +146,8 @@ public class PhoneBookView extends VerticalLayout {
         warningOnAlreadyUpdateContact.open();
         warnOnAlreadyUpdatedContact = false;
     }
-    private List<String> getCountriesNameList(){
-        return Arrays.stream(Locale.getISOCountries()).map(e-> (new Locale("",e)).getDisplayCountry()).sorted().collect(Collectors.toList());
+
+    private List<String> getCountriesNameList() {
+        return Arrays.stream(Locale.getISOCountries()).map(e -> (new Locale("", e)).getDisplayCountry()).sorted().collect(Collectors.toList());
     }
 }

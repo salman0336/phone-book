@@ -80,8 +80,8 @@ public class ContactDataProvider extends AbstractBackEndDataProvider<Contact, Cr
 
     }
 
-    public void delete(Contact contact) {
-        contactsMap.remove(contact.getPhoneNumber());
+    public void delete(String phoneNumber) {
+        contactsMap.remove(phoneNumber);
     }
 
     @Override
