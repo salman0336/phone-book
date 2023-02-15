@@ -21,6 +21,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 
+import org.vaadin.phonebook.datamanager.ContactMgr;
 import org.vaadin.phonebook.entity.Contact;
 import org.vaadin.phonebook.dataprovider.ContactDataProvider;
 
@@ -42,12 +43,7 @@ public class PhoneBookView extends VerticalLayout {
     private Boolean isAddContactClicked = false;
     private LocalDateTime lastUpdatedTimeFlag;
     private boolean warnOnAlreadyUpdatedContact = true;
-    static Map<String, Contact> contactsMap = new LinkedHashMap<>();
 
-    static {
-        contactsMap.put("03451550528", new Contact("Salman", "03451550528", "salman@gmail.com", "abc street", "xyz city", "Pakistan"));
-        contactsMap.put("09251550528", new Contact("Hafiz", "09251550528", "hafiz@gmail.com", "abc street", "xyz city", "Pakistan"));
-    }
 
     public PhoneBookView() {
         initView();
@@ -58,7 +54,7 @@ public class PhoneBookView extends VerticalLayout {
         crud.setEditOnClick(true);
         crud.setSizeFull();
         setGridColumns();
-        contactDataProvider = new ContactDataProvider(contactsMap);
+        contactDataProvider = new ContactDataProvider(ContactMgr.getContacts());
         crud.setDataProvider(contactDataProvider);
         crud.addPreSaveListener(e -> {
             if (!isAddContactClicked && isContactAlreadyUpdated(e.getItem()) && warnOnAlreadyUpdatedContact) {
@@ -108,14 +104,17 @@ public class PhoneBookView extends VerticalLayout {
 
     private void saveContact(Contact contact) {
         contact.setLastUpdatedTime(LocalDateTime.now());
-        if (contactsMap.containsValue(contact)) {
+        if (ContactMgr.contains(contact)) {
             contactDataProvider.delete(editPhoneNumber);
+            ContactMgr.deleteContact(editPhoneNumber);
         }
         contactDataProvider.persist(contact);
+        ContactMgr.saveContact(contact);
     }
 
     private void deleteContact(String phoneNumber) {
         contactDataProvider.delete(phoneNumber);
+        ContactMgr.deleteContact(phoneNumber);
     }
 
     private void setGridColumns() {
@@ -130,7 +129,7 @@ public class PhoneBookView extends VerticalLayout {
     }
 
     private void validateFields() {
-        SerializablePredicate<String> alreadyExist = value -> !(contactsMap.containsKey(phoneNumber.getValue()) && (isAddContactClicked || !phoneNumber.getValue().equals(editPhoneNumber)));
+        SerializablePredicate<String> alreadyExist = value -> !(ContactMgr.contains(phoneNumber.getValue()) && (isAddContactClicked || !phoneNumber.getValue().equals(editPhoneNumber)));
         Binder.Binding<Contact, String> phoneBinding = binder.forField(phoneNumber).asRequired().withValidator(alreadyExist, "Phone Number Already Exist")
                 .bind(Contact::getPhoneNumber, Contact::setPhoneNumber);
         binder.forField(email).asRequired().withValidator(new EmailValidator("Invalid Email Address")).bind(Contact::getEmail, Contact::setEmail);
