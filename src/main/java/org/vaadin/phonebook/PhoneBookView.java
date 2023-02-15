@@ -31,7 +31,7 @@ import org.vaadin.phonebook.dataprovider.ContactDataProvider;
 public class PhoneBookView extends VerticalLayout {
 
     private Crud<Contact> crud;
-    private ContactDataProvider contactDataProvider=new ContactDataProvider();
+    private ContactDataProvider contactDataProvider = new ContactDataProvider();
     private Binder<Contact> binder;
     private TextField name = new TextField("Name");
     private TextField phoneNumber = new TextField("Phone number");
@@ -54,7 +54,7 @@ public class PhoneBookView extends VerticalLayout {
         crud.setEditOnClick(true);
         crud.setSizeFull();
         setGridColumns();
-        ContactDataProvider.setContactMap(getContactsMap());
+        ContactDataProvider.setContactMap(contactsDao.getContacts());
         crud.setDataProvider(contactDataProvider);
         crud.addPreSaveListener(e -> {
             if (!isAddContactClicked && warnOnAlreadyUpdatedContact && isContactAlreadyUpdated()) {
@@ -103,20 +103,24 @@ public class PhoneBookView extends VerticalLayout {
 
     private void saveContact(Contact contact) {
         contact.setLastUpdatedTime(LocalDateTime.now());
+        boolean isSuccess = true;
         if (Objects.isNull(editPhoneNumber)) {
-            contactsDao.addContact(contact);
+            isSuccess = contactsDao.addContact(contact);
         } else if (!contact.getPhoneNumber().equals(editPhoneNumber)) {
             deleteContact(editPhoneNumber);
-            contactsDao.addContact(contact);
+            isSuccess = contactsDao.addContact(contact);
         } else {
-            contactsDao.updateContact(contact);
+            isSuccess = contactsDao.updateContact(contact);
         }
-        contactDataProvider.persist(contact);
+        if (isSuccess) {
+            contactDataProvider.persist(contact);
+        }
     }
 
     private void deleteContact(String phoneNumber) {
-        contactDataProvider.delete(phoneNumber);
-        contactsDao.deleteContact(phoneNumber);
+        if (contactsDao.deleteContact(phoneNumber)) {
+            contactDataProvider.delete(phoneNumber);
+        }
     }
 
     private void setGridColumns() {
@@ -151,10 +155,6 @@ public class PhoneBookView extends VerticalLayout {
 
     private List<String> getCountriesNameList() {
         return Arrays.stream(Locale.getISOCountries()).map(e -> (new Locale("", e)).getDisplayCountry()).sorted().collect(Collectors.toList());
-    }
-
-    private Map<String, Contact> getContactsMap() {
-        return contactsDao.getContacts();
     }
 
 }

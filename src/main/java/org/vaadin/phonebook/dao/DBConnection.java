@@ -21,8 +21,11 @@ public class DBConnection {
             throw new RuntimeException(e);
         }
     }
-    private DBConnection(){}
-    public static Connection getConnection(){
+
+    private DBConnection() {
+    }
+
+    public static Connection getConnection() {
         return connection;
     }
 

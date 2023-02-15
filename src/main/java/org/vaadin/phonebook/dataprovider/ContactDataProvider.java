@@ -14,11 +14,11 @@ import java.util.stream.Stream;
 
 public class ContactDataProvider extends AbstractBackEndDataProvider<Contact, CrudFilter> {
 
-    private static  Map<String, Contact> contactsMap;
+    private static Map<String, Contact> contactsMap;
     private transient Consumer<Long> sizeChangeListener;
 
-    public static void setContactMap(Map<String, Contact> map){
-        contactsMap=map;
+    public static void setContactMap(Map<String, Contact> map) {
+        contactsMap = map;
     }
 
     @Override
@@ -79,10 +79,12 @@ public class ContactDataProvider extends AbstractBackEndDataProvider<Contact, Cr
         contactsMap.put(contact.getPhoneNumber(), contact);
 
     }
-    public boolean contains(String phoneNumber){
+
+    public boolean contains(String phoneNumber) {
         return contactsMap.containsKey(phoneNumber);
     }
-    public  boolean contains(Contact contact){
+
+    public boolean contains(Contact contact) {
         return contactsMap.containsValue(contact);
     }
 

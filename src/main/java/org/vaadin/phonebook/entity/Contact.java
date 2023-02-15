@@ -4,7 +4,7 @@ package org.vaadin.phonebook.entity;
 import java.time.LocalDateTime;
 
 
-public class Contact{
+public class Contact {
 
 
     private String name;
@@ -18,6 +18,7 @@ public class Contact{
 
     public Contact() {
     }
+
     public Contact(String name, String phoneNumber, String email, String street, String city, String country, LocalDateTime dateTime) {
         this.name = name;
         this.phoneNumber = phoneNumber;
