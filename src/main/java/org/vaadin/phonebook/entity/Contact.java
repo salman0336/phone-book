@@ -18,14 +18,14 @@ public class Contact{
 
     public Contact() {
     }
-    public Contact(String name, String phoneNumber, String email, String street, String city, String country) {
+    public Contact(String name, String phoneNumber, String email, String street, String city, String country, LocalDateTime dateTime) {
         this.name = name;
         this.phoneNumber = phoneNumber;
         this.street = street;
         this.city = city;
         this.country = country;
         this.email = email;
-        lastUpdatedTime = LocalDateTime.now();
+        lastUpdatedTime = dateTime;
     }
 
     public String getName() {

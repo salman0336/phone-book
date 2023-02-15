@@ -21,7 +21,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 
-import org.vaadin.phonebook.datamanager.ContactMgr;
+import org.vaadin.phonebook.dao.ContactsDao;
 import org.vaadin.phonebook.entity.Contact;
 import org.vaadin.phonebook.dataprovider.ContactDataProvider;
 
@@ -31,7 +31,7 @@ import org.vaadin.phonebook.dataprovider.ContactDataProvider;
 public class PhoneBookView extends VerticalLayout {
 
     private Crud<Contact> crud;
-    private ContactDataProvider contactDataProvider;
+    private ContactDataProvider contactDataProvider=new ContactDataProvider();
     private Binder<Contact> binder;
     private TextField name = new TextField("Name");
     private TextField phoneNumber = new TextField("Phone number");
@@ -43,7 +43,7 @@ public class PhoneBookView extends VerticalLayout {
     private Boolean isAddContactClicked = false;
     private LocalDateTime lastUpdatedTimeFlag;
     private boolean warnOnAlreadyUpdatedContact = true;
-
+    private transient ContactsDao contactsDao = new ContactsDao();
 
     public PhoneBookView() {
         initView();
@@ -54,10 +54,10 @@ public class PhoneBookView extends VerticalLayout {
         crud.setEditOnClick(true);
         crud.setSizeFull();
         setGridColumns();
-        contactDataProvider = new ContactDataProvider(ContactMgr.getContacts());
+        ContactDataProvider.setContactMap(getContactsMap());
         crud.setDataProvider(contactDataProvider);
         crud.addPreSaveListener(e -> {
-            if (!isAddContactClicked && isContactAlreadyUpdated(e.getItem()) && warnOnAlreadyUpdatedContact) {
+            if (!isAddContactClicked && warnOnAlreadyUpdatedContact && isContactAlreadyUpdated()) {
                 createWarningDialogue();
                 e.getSource().cancelSave();
             }
@@ -98,23 +98,25 @@ public class PhoneBookView extends VerticalLayout {
         binder.bind(city, Contact::getCity, Contact::setCity);
         binder.bind(countryComboBox, Contact::getCountry, Contact::setCountry);
         countryComboBox.setItems(getCountriesNameList());
-
         return new BinderCrudEditor<>(binder, formLayout);
     }
 
     private void saveContact(Contact contact) {
         contact.setLastUpdatedTime(LocalDateTime.now());
-        if (ContactMgr.contains(contact)) {
-            contactDataProvider.delete(editPhoneNumber);
-            ContactMgr.deleteContact(editPhoneNumber);
+        if (Objects.isNull(editPhoneNumber)) {
+            contactsDao.addContact(contact);
+        } else if (!contact.getPhoneNumber().equals(editPhoneNumber)) {
+            deleteContact(editPhoneNumber);
+            contactsDao.addContact(contact);
+        } else {
+            contactsDao.updateContact(contact);
         }
         contactDataProvider.persist(contact);
-        ContactMgr.saveContact(contact);
     }
 
     private void deleteContact(String phoneNumber) {
         contactDataProvider.delete(phoneNumber);
-        ContactMgr.deleteContact(phoneNumber);
+        contactsDao.deleteContact(phoneNumber);
     }
 
     private void setGridColumns() {
@@ -122,14 +124,15 @@ public class PhoneBookView extends VerticalLayout {
         crud.getGrid().setColumnOrder(crud.getGrid().getColumnByKey("name"), crud.getGrid().getColumnByKey("phoneNumber"), crud.getGrid().getColumnByKey("email"), crud.getGrid().getColumnByKey("street"), crud.getGrid().getColumnByKey("city"), crud.getGrid().getColumnByKey("country"));
     }
 
-    private Boolean isContactAlreadyUpdated(Contact contact) {
-        if (contact.getLastUpdatedTime().equals(lastUpdatedTimeFlag))
+    private Boolean isContactAlreadyUpdated() {
+        Optional<Contact> contactOptional = contactDataProvider.find(editPhoneNumber);
+        if (contactOptional.isPresent() && contactOptional.get().getLastUpdatedTime().equals(lastUpdatedTimeFlag))
             return false;
         return true;
     }
 
     private void validateFields() {
-        SerializablePredicate<String> alreadyExist = value -> !(ContactMgr.contains(phoneNumber.getValue()) && (isAddContactClicked || !phoneNumber.getValue().equals(editPhoneNumber)));
+        SerializablePredicate<String> alreadyExist = value -> !(contactDataProvider.contains(phoneNumber.getValue()) && (isAddContactClicked || !phoneNumber.getValue().equals(editPhoneNumber)));
         Binder.Binding<Contact, String> phoneBinding = binder.forField(phoneNumber).asRequired().withValidator(alreadyExist, "Phone Number Already Exist")
                 .bind(Contact::getPhoneNumber, Contact::setPhoneNumber);
         binder.forField(email).asRequired().withValidator(new EmailValidator("Invalid Email Address")).bind(Contact::getEmail, Contact::setEmail);
@@ -149,4 +152,9 @@ public class PhoneBookView extends VerticalLayout {
     private List<String> getCountriesNameList() {
         return Arrays.stream(Locale.getISOCountries()).map(e -> (new Locale("", e)).getDisplayCountry()).sorted().collect(Collectors.toList());
     }
+
+    private Map<String, Contact> getContactsMap() {
+        return contactsDao.getContacts();
+    }
+
 }
